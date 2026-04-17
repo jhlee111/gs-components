@@ -12,11 +12,24 @@ Each component ships as a standalone ES module that defines its own custom eleme
 
 ## Install
 
+This package is not published to npm yet. Install directly from GitHub:
+
 ```bash
-npm install gs-components lit
+npm install github:jhlee111/gs-components lit
 ```
 
-`lit` is a peer of the package and is marked `external` in the build — install it alongside.
+Or add it as a local dependency while developing:
+
+```bash
+git clone https://github.com/jhlee111/gs-components.git
+cd gs-components && npm install && npm run build
+# then, from your app:
+npm install /absolute/path/to/gs-components lit
+```
+
+`lit` is marked `external` in the build, so install it alongside in the host app.
+
+> Note: `dist/` is git-ignored. When installing from GitHub, run `npm run build` inside the package (or use a `prepare` script) so the built files exist before import.
 
 ## Usage
 
@@ -30,6 +43,15 @@ import 'gs-components';
 
 ```js
 import 'gs-components/gs-birthday-picker';
+```
+
+Or, without any bundler, load the source directly (requires an import map for `lit`):
+
+```html
+<script type="importmap">
+  { "imports": { "lit": "https://esm.sh/lit@3" } }
+</script>
+<script type="module" src="./src/gs-birthday-picker/gs-birthday-picker.js"></script>
 ```
 
 Then drop the tag into your markup:
