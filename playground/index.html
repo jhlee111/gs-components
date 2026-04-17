@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>gs-components — Playground</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100dvh;
+    background: #f0ede8;
+    font-family: 'DM Sans', sans-serif;
+    padding: 40px 24px;
+  }
+  .page-header {
+    max-width: 600px;
+    margin: 0 auto 40px;
+    text-align: center;
+  }
+  .page-header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(32px, 5vw, 56px);
+    color: #1a1714;
+    font-weight: 400;
+    margin-bottom: 8px;
+  }
+  .page-header p {
+    color: #7a746b;
+    font-size: clamp(14px, 2vw, 18px);
+  }
+  .component-list {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .component-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: box-shadow 0.15s, transform 0.1s;
+  }
+  .component-card:active {
+    transform: scale(0.99);
+  }
+  .component-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  .component-card h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1a1714;
+    font-family: 'DM Mono', monospace;
+  }
+  .component-card p {
+    font-size: 14px;
+    color: #7a746b;
+    margin-top: 4px;
+  }
+  .component-card .arrow {
+    font-size: 24px;
+    color: #a09a90;
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400&family=DM+Sans:wght@400;500;600&family=Instrument+Serif&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="page-header">
+  <h1>gs-components</h1>
+  <p>Web components for GsNet — touch-first, themeable</p>
+</div>
+
+<div class="component-list">
+  <a class="component-card" href="./gs-birthday-picker.html">
+    <div>
+      <h3>&lt;gs-birthday-picker&gt;</h3>
+      <p>Birthday date input with decade swipe, month grid, calendar</p>
+    </div>
+    <span class="arrow">→</span>
+  </a>
+</div>
+
+</body>
+</html>
