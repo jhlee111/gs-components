@@ -1,24 +1,47 @@
 {
-  "name": "gs-components",
+  "name": "gs-webcomponents",
   "version": "0.1.0",
+  "description": "Touch-first web components for GsNet, built with Lit and themeable via CSS custom properties.",
   "type": "module",
   "license": "MIT",
-  "main": "dist/gs-components.js",
-  "module": "dist/gs-components.js",
+  "author": "jhlee111",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhlee111/gs-components.git"
+  },
+  "homepage": "https://github.com/jhlee111/gs-components#readme",
+  "bugs": {
+    "url": "https://github.com/jhlee111/gs-components/issues"
+  },
+  "keywords": [
+    "web-components",
+    "custom-elements",
+    "lit",
+    "birthday-picker",
+    "date-picker",
+    "gsnet"
+  ],
+  "main": "dist/gs-webcomponents.js",
+  "module": "dist/gs-webcomponents.js",
   "exports": {
-    ".": "./dist/gs-components.js",
+    ".": "./dist/gs-webcomponents.js",
     "./gs-birthday-picker": "./dist/gs-birthday-picker.js"
   },
   "files": ["dist", "src"],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "vite build"
   },
-  "dependencies": {
-    "lit": "^3.1.2"
+  "peerDependencies": {
+    "lit": "^3.0.0"
   },
   "devDependencies": {
+    "lit": "^3.1.2",
     "vite": "^6.3.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
