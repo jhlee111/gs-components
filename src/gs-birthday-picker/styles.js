@@ -407,7 +407,7 @@ export const styles = css`
      year grid filling the right), and compress the month grid so its
      vertical footprint shrinks. Template shape is unchanged; this is
      pure CSS grid-column/grid-row placement. */
-  @container picker (max-height: 480px) and (min-width: 700px) {
+  @container picker (max-height: 480px) and (min-aspect-ratio: 5 / 4) {
     .year-step {
       display: grid;
       grid-template-columns: minmax(220px, 1fr) 2fr;
