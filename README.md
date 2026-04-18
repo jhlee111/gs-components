@@ -45,6 +45,77 @@ Then drop the tag into your markup:
 </script>
 ```
 
+## Phoenix LiveView
+
+Custom elements are plain `HTMLElement`s, so Phoenix hooks attach directly — no wrapper `<div>` needed. Add `phx-update="ignore"` so LiveView's DOM diff does not patch over the component's internal state on re-render.
+
+```heex
+<gs-birthday-picker
+  id="birthday-picker"
+  phx-hook="GsBirthdayPicker"
+  phx-update="ignore"
+  value={@birthday}
+  show-age
+/>
+```
+
+The hook imports the component once and forwards `gs-birthday-selected` to the server. Pick explicit fields from `detail` — `detail.date` is a JS `Date` object and won't JSON-serialize cleanly.
+
+```js
+// assets/js/hooks/gs_birthday_picker.js
+import "gs-webcomponents/gs-birthday-picker";
+
+export const GsBirthdayPicker = {
+  mounted() {
+    this.el.addEventListener("gs-birthday-selected", ({ detail }) => {
+      this.pushEvent("birthday-selected", {
+        iso: detail.iso,
+        age: detail.age,
+      });
+    });
+  },
+};
+```
+
+Register it in `app.js`:
+
+```js
+import { GsBirthdayPicker } from "./hooks/gs_birthday_picker";
+
+let liveSocket = new LiveSocket("/live", Socket, {
+  hooks: { GsBirthdayPicker },
+  // ...
+});
+```
+
+Server handler:
+
+```elixir
+def handle_event("birthday-selected", %{"iso" => iso, "age" => age}, socket) do
+  {:noreply, assign(socket, birthday: iso, age: age)}
+end
+```
+
+Use `gs-birthday-changed` instead of `gs-birthday-selected` if you need partial selections (e.g. to show a "keep going" hint before the user has picked a day).
+
+### Prefilling and server-driven updates
+
+The `value` attribute is read on mount, so `value={@birthday}` handles the **initial** value. Because `phx-update="ignore"` stops LiveView from patching this element after mount, later changes to `@birthday` won't flow into the DOM automatically. Push them through the hook instead:
+
+```elixir
+# server
+{:noreply, push_event(socket, "set-birthday", %{value: "1990-05-12"})}
+```
+
+```js
+// hook mounted()
+this.handleEvent("set-birthday", ({ value }) => {
+  this.el.value = value;
+});
+```
+
+Setting `this.el.value` writes the property directly, which the component picks up and re-renders from. Skip this block if the server only ever *receives* the value (typical form flow) — then the initial `value={@birthday}` is all you need.
+
 ## `<gs-birthday-picker>`
 
 Three-step picker: pick a decade, a year, a month, and a day. Decades swipe horizontally on touch devices; months expand into a 3×4 grid; days render as a month calendar.
