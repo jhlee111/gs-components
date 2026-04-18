@@ -1,6 +1,6 @@
 {
   "name": "gs-webcomponents",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Touch-first web components for GsNet, built with Lit and themeable via CSS custom properties.",
   "type": "module",
   "license": "MIT",
@@ -27,7 +27,10 @@
     ".": "./dist/gs-webcomponents.js",
     "./gs-birthday-picker": "./dist/gs-birthday-picker.js"
   },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
