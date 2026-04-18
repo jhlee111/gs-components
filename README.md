@@ -49,6 +49,37 @@ Then drop the tag into your markup:
 
 Three-step picker: pick a decade, a year, a month, and a day. Decades swipe horizontally on touch devices; months expand into a 3×4 grid; days render as a month calendar.
 
+### Sizing
+
+The component is **box-agnostic**: `:host` sets `display: block` with no intrinsic height or viewport coupling. The consumer decides the size by wrapping the tag (or constraining it directly). Internally, the component uses `container-type: size` so shadow DOM layout adapts to the _host's actual box_, not the outer viewport — the compact landscape-phone layout activates whenever the host is ≤480px tall and ≥700px wide, regardless of where the component is embedded.
+
+Recommended patterns:
+
+```html
+<!-- Full-page signing flow (Tailwind) -->
+<div class="h-[calc(100svh-14rem)] min-h-[28rem]">
+  <gs-birthday-picker></gs-birthday-picker>
+</div>
+
+<!-- Modal / fixed card -->
+<div style="height: 520px;">
+  <gs-birthday-picker></gs-birthday-picker>
+</div>
+
+<!-- Inline, natural size (no wrapper) -->
+<!-- Component grows to content; fine for long scrollable host pages. -->
+<gs-birthday-picker></gs-birthday-picker>
+```
+
+When a definite height is given, internal panels flex-fill that box and the year grid uses `1fr` rows. When no height is given, the component renders at its natural content height. Panels reserve 5rem of bottom padding for the absolutely-positioned result bar, so selecting a date does not cause layout shift.
+
+Container-query breakpoints (evaluated on the host's own box, not the viewport):
+
+| Host size | Layout |
+| --- | --- |
+| Default (tall / portrait) | Year step stacked vertically; 5-col year grid (2-col in portrait viewports). |
+| `max-height: 480px and min-width: 700px` (e.g. landscape phone) | Year step reshapes into 2-col: decade nav + hint + dots on the left, year grid on the right. Month grid compresses to 4×3. |
+
 ### Attributes / properties
 
 | Attribute | Property | Type | Default | Notes |

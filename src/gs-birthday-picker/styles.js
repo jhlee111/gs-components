@@ -1,23 +1,52 @@
 import { css } from 'lit';
 
 export const styles = css`
+  /* ============================================================
+     BOX MODEL / SIZING PHILOSOPHY
+     ------------------------------------------------------------
+     The component is intentionally box-agnostic:
+
+       - :host sets display:block with NO height/max-height.
+       - The consumer chooses the outer size by wrapping the element
+         (e.g. a div with height: 520px, or min-height / 100svh-based).
+       - When a height is given, .container fills it (height: 100%)
+         and internal panels flex-fill to consume the available space.
+       - When no height is given, the component sizes to its natural
+         content (acceptable for long, scrollable host pages).
+
+     We also opt-in to container queries via container-type: size so
+     the shadow DOM can adapt to the HOST'S actual box, not the
+     viewport. This is what allows the compact 2-column year step to
+     kick in on short+wide hosts (e.g. landscape phones) even when
+     the host page itself is a totally different size.
+     ============================================================ */
   :host {
     display: block;
     font-family: var(--_font);
     user-select: none;
     -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
+    container-type: size;
+    container-name: picker;
   }
 
   .container {
+    position: relative;
     background: var(--_bg);
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 2px 6px rgba(0,0,0,0.06), 0 12px 40px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    /* When the host has a definite height, fill it. When the host is
+       content-sized, height: 100% resolves to auto and the container
+       sizes to its children instead. */
+    height: 100%;
   }
 
   /* ===== HEADER ===== */
   .header {
+    flex: 0 0 auto;
     padding: 20px 28px;
     display: flex;
     align-items: center;
@@ -80,7 +109,16 @@ export const styles = css`
   }
 
   /* ===== YEAR STEP ===== */
-  .year-step { padding: 0; }
+  .year-step {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    /* 5rem bottom padding reserves space for the absolute result-bar
+       so selected-state content isn't hidden beneath it. */
+    padding: 0 0 5rem;
+    display: flex;
+    flex-direction: column;
+  }
 
   .decade-nav {
     display: flex;
@@ -125,16 +163,23 @@ export const styles = css`
     overflow: hidden;
     touch-action: pan-y;
     padding: 12px 24px 24px;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .decade-page {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: 1fr;
     gap: clamp(8px, 1.2vw, 16px);
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .year-btn {
-    padding: clamp(16px, 2.5vw, 32px) 8px;
+    padding: 8px;
     border-radius: var(--_radius);
     border: 1px solid var(--_border);
     background: var(--_bg);
@@ -144,7 +189,7 @@ export const styles = css`
     cursor: pointer;
     transition: all 0.12s;
     text-align: center;
-    min-height: clamp(60px, 8vw, 88px);
+    min-height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -189,6 +234,9 @@ export const styles = css`
   .monthday-step {
     display: flex;
     overflow: hidden;
+    padding-bottom: 5rem;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .month-expanded {
@@ -198,6 +246,9 @@ export const styles = css`
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(4, 1fr);
     gap: clamp(10px, 1.5vw, 18px);
+    max-width: 36rem;
+    margin: 0 auto;
+    min-height: 0;
   }
 
   .month-grid-btn {
@@ -205,14 +256,14 @@ export const styles = css`
     border: 2px solid var(--_border);
     background: var(--_bg);
     font-family: inherit;
-    font-size: clamp(18px, 2.8vw, 28px);
+    font-size: clamp(16px, 2.4vw, 24px);
     font-weight: 500;
     color: var(--_fg);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: clamp(64px, 10vw, 100px);
+    min-height: 56px;
     transition: all 0.15s;
   }
   .month-grid-btn:active {
@@ -230,9 +281,11 @@ export const styles = css`
   /* ===== DAY PANEL ===== */
   .day-panel {
     flex: 1 1 auto;
-    padding: clamp(16px, 2vw, 28px);
+    padding: clamp(12px, 2vw, 28px);
     display: flex;
     flex-direction: column;
+    align-items: center;
+    min-height: 0;
   }
 
   .day-header {
@@ -240,24 +293,30 @@ export const styles = css`
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
     margin-bottom: 8px;
+    width: 100%;
+    max-width: 32rem;
+    flex: 0 0 auto;
   }
   .day-header span {
     text-align: center;
     font-size: clamp(12px, 1.5vw, 17px);
     font-weight: 600;
     color: var(--_muted);
-    padding: 8px 0;
+    padding: 6px 0;
   }
 
   .day-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
     gap: clamp(4px, 0.6vw, 8px);
-    align-content: start;
+    width: 100%;
+    max-width: 32rem;
+    flex: 1 1 auto;
+    min-height: 0;
   }
 
   .day-cell {
-    aspect-ratio: 1;
     border-radius: 50%;
     border: none;
     background: transparent;
@@ -269,8 +328,7 @@ export const styles = css`
     align-items: center;
     justify-content: center;
     transition: all 0.1s;
-    min-width: clamp(40px, 5vw, 64px);
-    min-height: clamp(40px, 5vw, 64px);
+    min-height: 40px;
   }
   .day-cell:active {
     transform: scale(0.88);
@@ -291,9 +349,17 @@ export const styles = css`
   }
 
   /* ===== RESULT BAR ===== */
+  /* Overlays the bottom of the container as absolute so step transitions
+     don't cause the host to grow in height when a date is selected. Panels
+     reserve 5rem of bottom padding to avoid being hidden behind it. */
   .result-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     padding: 20px 28px;
     border-top: 1px solid var(--_border);
+    background: var(--_bg);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -310,17 +376,19 @@ export const styles = css`
     font-weight: 600;
   }
 
-  /* ===== ORIENTATION ===== */
+  /* ===== ORIENTATION (viewport-based fallbacks) =====
+     These still use viewport orientation so that portrait phones (where
+     the host is typically full-width) get a 2-col year grid by default.
+     Container-query rules below override these when the host box is
+     short+wide regardless of viewport. */
   @media (orientation: portrait) {
     .decade-page {
       grid-template-columns: repeat(2, 1fr);
     }
     .year-btn {
-      min-height: clamp(64px, 10vw, 100px);
       font-size: clamp(20px, 4vw, 32px);
     }
     .month-grid-btn {
-      min-height: clamp(72px, 12vw, 110px);
       font-size: clamp(18px, 3.5vw, 30px);
     }
   }
@@ -328,6 +396,103 @@ export const styles = css`
   @media (orientation: landscape) {
     .decade-page {
       grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  /* ===== COMPACT MODE (short + wide host box) =====
+     Container query on the HOST's own size. Targets landscape-phone-ish
+     hosts (<=480px tall, >=700px wide) regardless of what the outer
+     viewport actually is. In this mode we rearrange the year step into
+     a 2-column layout (decade nav + hint + dots stacked on the left,
+     year grid filling the right), and compress the month grid so its
+     vertical footprint shrinks. Template shape is unchanged; this is
+     pure CSS grid-column/grid-row placement. */
+  @container picker (max-height: 480px) and (min-width: 700px) {
+    .year-step {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 2fr;
+      grid-template-rows: auto 1fr auto;
+      column-gap: 16px;
+      padding: 0 16px 5rem;
+    }
+
+    .decade-nav {
+      grid-column: 1;
+      grid-row: 1;
+      padding: 12px 4px 8px;
+    }
+    .decade-label {
+      font-size: clamp(24px, 3vw, 36px);
+      min-width: 100px;
+    }
+
+    .swipe-hint {
+      grid-column: 1;
+      grid-row: 2;
+      align-self: end;
+      padding: 4px 0;
+    }
+    .swipe-dots {
+      grid-column: 1;
+      grid-row: 3;
+      padding: 4px 0 8px;
+    }
+
+    .decade-swipe-area {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      padding: 8px 8px 8px 0;
+    }
+    /* 5 cols x 2 rows of year buttons for a wide, short space. */
+    .decade-page {
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      grid-auto-rows: unset;
+    }
+    .year-btn {
+      font-size: clamp(16px, 2vw, 22px);
+      min-height: 40px;
+      padding: 4px;
+    }
+
+    /* Compress the month grid to 4 cols x 3 rows (was 3x4) so its
+       vertical footprint fits a short host without overflow. */
+    .month-expanded {
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: clamp(8px, 1.5vw, 16px);
+      gap: clamp(6px, 1vw, 12px);
+      max-width: none;
+    }
+    .month-grid-btn {
+      min-height: 40px;
+      font-size: clamp(14px, 1.8vw, 20px);
+    }
+
+    /* Day panel already uses repeat(6, 1fr) rows which handles a short
+       box naturally; just tighten padding and minimums. */
+    .day-panel {
+      padding: clamp(6px, 1vw, 12px);
+    }
+    .day-cell {
+      min-height: 28px;
+      font-size: clamp(13px, 1.6vw, 18px);
+    }
+
+    /* Shrink the header and result-bar paddings so they don't dominate
+       a short host. */
+    .header {
+      padding: 10px 20px;
+    }
+    .result-bar {
+      padding: 10px 20px;
+    }
+
+    .monthday-step {
+      padding-bottom: 4rem;
+    }
+    .year-step {
+      padding-bottom: 4rem;
     }
   }
 
