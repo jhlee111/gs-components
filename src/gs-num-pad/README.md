@@ -101,7 +101,7 @@ Currency symbols, thousand separators, and percent signs are applied to the visi
 | `max` | number | — | Maximum value. Violations fire `numpad-invalid`; input is **not blocked**. |
 | `step` | number | `1` | Increment unit. |
 | `decimals` | integer | `0` | Allowed decimal places. With `auto-decimal`, enforced automatically. |
-| `allow-negative` | boolean | absent | Enables the `±` key. |
+| `allow-negative` | boolean | absent | Enables sign toggling via hardware `+` / `-` keys (no on-screen `±` button in v1). |
 | `maxlength` | integer | — | Max digit count (excludes sign and decimal). Excess input is **blocked**. |
 | `required` | boolean | absent | Standard form-validation `required`. |
 
@@ -279,24 +279,24 @@ Width is determined by the host's `width`/`max-width` divided across the 4-colum
 
 | Variable | Default |
 | --- | --- |
-| `--numpad-bg` | `#fff` |
-| `--numpad-display-bg` | transparent |
-| `--numpad-display-color` | `#111` |
-| `--numpad-key-bg` | `#f0f0f0` |
-| `--numpad-key-bg-active` | `#e0e0e0` |
-| `--numpad-key-color` | `#111` |
-| `--numpad-special-bg` | `#e8e8e8` |
-| `--numpad-special-color` | `#111` |
-| `--numpad-submit-bg` | `#185fa5` |
-| `--numpad-submit-color` | `#fff` |
-| `--numpad-invalid-color` | `#e24b4a` |
-| `--numpad-placeholder-color` | `rgba(0,0,0,0.35)` |
+| `--numpad-bg` | `var(--gs-bg)` → `#fff` |
+| `--numpad-display-bg` | `transparent` *(intentional — display sits over the keypad container; no shared-token fallback)* |
+| `--numpad-display-color` | `var(--gs-fg)` → `#1a1714` |
+| `--numpad-key-bg` | `var(--gs-surface)` → `#f5f3ee` |
+| `--numpad-key-bg-active` | `var(--gs-surface-strong)` → `#e5e1da` *(hover state)* |
+| `--numpad-key-color` | `var(--gs-fg)` → `#1a1714` |
+| `--numpad-special-bg` | `var(--gs-surface-strong)` → `#e5e1da` |
+| `--numpad-special-color` | `var(--gs-fg)` → `#1a1714` |
+| `--numpad-submit-bg` | `var(--gs-accent)` → `#d35322` |
+| `--numpad-submit-color` | `var(--gs-on-accent)` → `#fff` |
+| `--numpad-invalid-color` | `var(--gs-danger)` → `#e24b4a` |
+| `--numpad-placeholder-color` | `var(--gs-muted)` → `#a09a90` |
 
 ### Typography & state
 
 | Variable | Default |
 | --- | --- |
-| `--numpad-font` | inherits from `var(--font-sans)` or `system-ui` |
+| `--numpad-font` | `var(--gs-font-family)` → `'DM Sans', sans-serif` |
 | `--numpad-disabled-opacity` | `0.3` |
 
 ### Parts
@@ -603,6 +603,7 @@ For older browsers, [`element-internals-polyfill`](https://github.com/calebdwill
 
 These are out of scope for v1 and may be added later:
 
+- **On-screen `±` key** — `allow-negative` enables sign toggling via the hardware `+` / `-` keys only; the keypad does not render a dedicated `±` button.
 - **Manual decimal mode** — when `auto-decimal` is absent and `decimals > 0`, the `.` key is shown but pressing it has no effect. Use `auto-decimal` for decimal input.
 - **Popup / overlay mode** — the component is inline-only. A popup variant would be a separate wrapper element.
 - **Long-press on `⌫`** — single press only; no key-repeat or hold-to-clear.
