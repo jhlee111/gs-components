@@ -407,6 +407,17 @@ export class GsNumPad extends LitElement {
 
   // ─── Core: apply input ──────────────────────────────────────────────────
 
+  // Set `this.value` AND sync the form-associated value synchronously, so
+  // listeners reading `new FormData(form)` inside the `input` event we
+  // dispatch right after see the current value (not the prior one). Lit's
+  // `willUpdate` will redundantly call `setFormValue` on the next microtask,
+  // which is idempotent.
+  _commitValue(next) {
+    this.value = next;
+    this.empty = next === '';
+    this._internals.setFormValue(next);
+  }
+
   _applyKey(key) {
     if (this.disabled || this.readonly) return;
     const prev = this.value;
@@ -452,7 +463,7 @@ export class GsNumPad extends LitElement {
 
     if (this._exceedsMaxLength(next)) return;
 
-    this.value = next;
+    this._commitValue(next);
     this._emit('numpad-input', this._inputDetail({
       value: next,
       previousValue: prev,
@@ -504,7 +515,7 @@ export class GsNumPad extends LitElement {
 
     if (this._exceedsMaxLength(next)) return;
 
-    this.value = next;
+    this._commitValue(next);
     this._emit('numpad-input', this._inputDetail({
       value: next,
       previousValue: prev,

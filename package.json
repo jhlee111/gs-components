@@ -1,6 +1,6 @@
 {
   "name": "gs-webcomponents",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Touch-first web components for GsNet, built with Lit and themeable via CSS custom properties.",
   "type": "module",
   "license": "MIT",
