@@ -75,6 +75,7 @@ export class GsNumPad extends LitElement {
       justify-content: flex-end;
       align-items: center;
       gap: 4px;
+      /* intentionally transparent — display sits over the keypad container */
       background: var(--numpad-display-bg, transparent);
       color: var(--numpad-display-color, var(--_fg));
       font-size: var(--numpad-display-size, 32px);
