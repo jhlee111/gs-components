@@ -6,9 +6,10 @@ Each component ships as a standalone ES module that defines its own custom eleme
 
 ## Components
 
-| Tag | Description |
-| --- | --- |
-| `<gs-birthday-picker>` | Birthday date input with decade swipe, month grid, and calendar. |
+| Tag | Description | Docs |
+| --- | --- | --- |
+| `<gs-birthday-picker>` | Birthday date input with decade swipe, month grid, calendar. | [src/gs-birthday-picker/](./src/gs-birthday-picker/README.md) |
+| `<gs-num-pad>` | Touch-first, form-associated numeric keypad. | [src/gs-num-pad/](./src/gs-num-pad/README.md) |
 
 ## Install
 
@@ -30,24 +31,57 @@ import 'gs-webcomponents';
 
 ```js
 import 'gs-webcomponents/gs-birthday-picker';
+import 'gs-webcomponents/gs-num-pad';
 ```
 
-Then drop the tag into your markup:
+After import, the custom element is registered globally and can be used anywhere:
 
 ```html
 <gs-birthday-picker show-age></gs-birthday-picker>
-
-<script type="module">
-  const el = document.querySelector('gs-birthday-picker');
-  el.addEventListener('gs-birthday-selected', (e) => {
-    console.log(e.detail); // { year, month, day, date, iso, age }
-  });
-</script>
+<gs-num-pad name="amount" format="currency" currency="USD" decimals="2" auto-decimal></gs-num-pad>
 ```
+
+See each component's README (linked in the table above) for its full API.
+
+## Theming
+
+Every component composes a shared design-token sheet (`src/shared/theme.js`) and routes its own color and font CSS variables through that namespace. This gives hosts two layers of control:
+
+```css
+/* Tier 1 — re-skin everything by setting shared tokens */
+:root {
+  --gs-bg: #ffffff;
+  --gs-fg: #1a1714;
+  --gs-accent: #d35322;
+  --gs-accent-soft: #fef0e8;
+  --gs-on-accent: #ffffff;
+  --gs-surface: #f5f3ee;
+  --gs-surface-strong: #e5e1da;
+  --gs-muted: #a09a90;
+  --gs-border: #e5e1da;
+  --gs-danger: #e24b4a;
+  --gs-radius: 16px;
+  --gs-font-family: 'DM Sans', sans-serif;
+}
+
+/* Tier 2 — diverge on a single component */
+gs-num-pad {
+  --numpad-key-bg: #fff;
+  --numpad-submit-bg: #185fa5;
+}
+```
+
+The shared tokens have sensible fallbacks, so you only set what you want to change. Component-specific variables (e.g. `--numpad-*`, sizing tokens) are documented in the per-component README.
 
 ## Phoenix LiveView
 
 Custom elements are plain `HTMLElement`s, so Phoenix hooks attach directly — no wrapper `<div>` needed. Add `phx-update="ignore"` so LiveView's DOM diff does not patch over the component's internal state on re-render.
+
+Two wiring styles below — pick based on your Phoenix/LiveView version.
+
+### Classic hooks (any LiveView version)
+
+Template:
 
 ```heex
 <gs-birthday-picker
@@ -59,7 +93,7 @@ Custom elements are plain `HTMLElement`s, so Phoenix hooks attach directly — n
 />
 ```
 
-The hook imports the component once and forwards `gs-birthday-selected` to the server. Pick explicit fields from `detail` — `detail.date` is a JS `Date` object and won't JSON-serialize cleanly.
+Hook file — import the component once, forward the component's custom event to the server:
 
 ```js
 // assets/js/hooks/gs_birthday_picker.js
@@ -77,7 +111,7 @@ export const GsBirthdayPicker = {
 };
 ```
 
-Register it in `app.js`:
+Register in `app.js`:
 
 ```js
 import { GsBirthdayPicker } from "./hooks/gs_birthday_picker";
@@ -88,109 +122,65 @@ let liveSocket = new LiveSocket("/live", Socket, {
 });
 ```
 
-Server handler:
+### Colocated hooks (LiveView 1.1+ · Phoenix 1.8+)
+
+Wrap the custom element in a function component and colocate the hook in the same file. Hook names starting with `.` are prefixed with the enclosing module at compile time.
 
 ```elixir
-def handle_event("birthday-selected", %{"iso" => iso, "age" => age}, socket) do
-  {:noreply, assign(socket, birthday: iso, age: age)}
+defmodule MyAppWeb.Components.BirthdayPicker do
+  use Phoenix.Component
+  alias Phoenix.LiveView.ColocatedHook
+
+  attr :id, :string, required: true
+  attr :value, :string, default: ""
+  attr :show_age, :boolean, default: true
+
+  def birthday_picker(assigns) do
+    ~H"""
+    <gs-birthday-picker
+      id={@id}
+      phx-hook=".BirthdayPicker"
+      phx-update="ignore"
+      value={@value}
+      show-age={@show_age}
+    />
+    <script :type={ColocatedHook} name=".BirthdayPicker">
+      import "gs-webcomponents/gs-birthday-picker";
+
+      export default {
+        mounted() {
+          this.el.addEventListener("gs-birthday-selected", ({ detail }) => {
+            this.pushEvent("birthday-selected", {
+              iso: detail.iso,
+              age: detail.age,
+            });
+          });
+        },
+      };
+    </script>
+    """
+  end
 end
 ```
 
-Use `gs-birthday-changed` instead of `gs-birthday-selected` if you need partial selections (e.g. to show a "keep going" hint before the user has picked a day).
-
-### Prefilling and server-driven updates
-
-The `value` attribute is read on mount, so `value={@birthday}` handles the **initial** value. Because `phx-update="ignore"` stops LiveView from patching this element after mount, later changes to `@birthday` won't flow into the DOM automatically. Push them through the hook instead:
-
-```elixir
-# server
-{:noreply, push_event(socket, "set-birthday", %{value: "1990-05-12"})}
-```
+Import all colocated hooks once in `app.js` (replace `my_app` with the OTP app name from `mix.exs`):
 
 ```js
-// hook mounted()
-this.handleEvent("set-birthday", ({ value }) => {
-  this.el.value = value;
+import { hooks as colocatedHooks } from "phoenix-colocated/my_app";
+
+let liveSocket = new LiveSocket("/live", Socket, {
+  hooks: { ...colocatedHooks },
+  // ...
 });
 ```
 
-Setting `this.el.value` writes the property directly, which the component picks up and re-renders from. Skip this block if the server only ever *receives* the value (typical form flow) — then the initial `value={@birthday}` is all you need.
+Colocated hooks require an esbuild config update so the `phoenix-colocated` folder in `_build/$MIX_ENV` is resolvable — see the `Phoenix.LiveView.ColocatedHook` module docs.
 
-## `<gs-birthday-picker>`
+### Why `phx-update="ignore"`?
 
-Three-step picker: pick a decade, a year, a month, and a day. Decades swipe horizontally on touch devices; months expand into a 3×4 grid; days render as a month calendar.
+The components are reactive and reflect attribute changes immediately. Without `phx-update="ignore"`, a server-side re-render mid-input would clobber the user's in-progress value. To force a value update from the server after mount, change the element's `id` (forces remount) or push an event through the hook that writes `this.el.value = newValue`.
 
-### Sizing
-
-The component is **box-agnostic**: `:host` sets `display: block` with no intrinsic height or viewport coupling. The consumer decides the size by wrapping the tag (or constraining it directly). Internally, the component uses `container-type: size` so shadow DOM layout adapts to the _host's actual box_, not the outer viewport — the compact landscape-phone layout activates whenever the host is ≤480px tall and ≥700px wide, regardless of where the component is embedded.
-
-Recommended patterns:
-
-```html
-<!-- Full-page signing flow (Tailwind) -->
-<div class="h-[calc(100svh-14rem)] min-h-[28rem]">
-  <gs-birthday-picker></gs-birthday-picker>
-</div>
-
-<!-- Modal / fixed card -->
-<div style="height: 520px;">
-  <gs-birthday-picker></gs-birthday-picker>
-</div>
-
-<!-- Inline, natural size (no wrapper) -->
-<!-- Component grows to content; fine for long scrollable host pages. -->
-<gs-birthday-picker></gs-birthday-picker>
-```
-
-When a definite height is given, internal panels flex-fill that box and the year grid uses `1fr` rows. When no height is given, the component renders at its natural content height. Panels reserve 5rem of bottom padding for the absolutely-positioned result bar, so selecting a date does not cause layout shift.
-
-Container-query breakpoints (evaluated on the host's own box, not the viewport):
-
-| Host size | Layout |
-| --- | --- |
-| Default (tall / portrait) | Year step stacked vertically; 5-col year grid (2-col in portrait viewports). |
-| `max-height: 480px and min-width: 700px` (e.g. landscape phone) | Year step reshapes into 2-col: decade nav + hint + dots on the left, year grid on the right. Month grid compresses to 4×3. |
-
-### Attributes / properties
-
-| Attribute | Property | Type | Default | Notes |
-| --- | --- | --- | --- | --- |
-| `show-age` | `showAge` | boolean | `true` | Show computed age in the result bar. |
-| `min-year` | `minYear` | number | `1930` | Earliest selectable year. |
-| `max-year` | `maxYear` | number | current year | Latest selectable year; future years are disabled. |
-| `default-decade` | `defaultDecade` | number | current year − 30, floored to decade | Decade shown on first open. |
-| `value` | `value` | string | `''` | ISO `YYYY-MM-DD`; reflected to attribute. Set to prefill. |
-
-### Events
-
-| Event | Detail |
-| --- | --- |
-| `gs-birthday-changed` | `{ year, month, day }` — fired on any selection change (partial or complete). |
-| `gs-birthday-selected` | `{ year, month, day, date, iso, age }` — fired once all three fields are set. |
-
-Both events bubble and cross shadow DOM boundaries.
-
-### Theming
-
-Override CSS custom properties on (or inside) the element:
-
-```css
-gs-birthday-picker {
-  --gs-bg: #ffffff;
-  --gs-fg: #1a1714;
-  --gs-muted: #a09a90;
-  --gs-accent: #d35322;
-  --gs-accent-soft: #fef0e8;
-  --gs-border: #e5e1da;
-  --gs-radius: 16px;
-  --gs-touch-min: 56px;
-  --gs-font-family: 'DM Sans', sans-serif;
-  --gs-font-mono: 'DM Mono', monospace;
-  --gs-font-serif: 'Instrument Serif', serif;
-}
-```
-
-All tokens have sensible fallbacks (see `src/shared/theme.js`), so you only need to set what you want to change.
+`gs-num-pad` is **form-associated**, so for plain `phx-change` / `phx-submit` flows you don't need a hook at all — its value participates in `FormData` natively. See the gs-num-pad README for details.
 
 ## Development
 
@@ -206,18 +196,36 @@ npm run preview    # Preview the built output
 
 Source of truth for component code lives in `src/`; `dist/` is generated and git-ignored.
 
+## Adding a new component
+
+1. Create `src/gs-<name>/gs-<name>.js` — class extends `LitElement`, registers `gs-<name>`, composes `gsTokens` from `../shared/theme.js`.
+2. Create `src/gs-<name>/README.md` — follow the standard sections: overview, install, attributes/properties, events, slots (if any), styling, examples.
+3. Add `export { Gs<Name> } from './gs-<name>/gs-<name>.js';` to `src/index.js`.
+4. Add `'gs-<name>': 'src/gs-<name>/gs-<name>.js'` to `vite.config.js` `build.lib.entry`.
+5. Add `"./gs-<name>": "./dist/gs-<name>.js"` to `package.json` `exports`.
+6. Create `playground/gs-<name>.html` — mirror the structure of an existing playground page.
+7. Add a card to `playground/index.html`.
+8. Add a row to the **Components** table in this README, linking to the per-component README.
+
+When component-specific colors are needed, add the corresponding shared token to `src/shared/theme.js` first, then have the component reference it via `var(--<name>-foo, var(--_token, default))`. Don't hardcode colors — go through the two-tier theming chain.
+
 ## Project layout
 
 ```
 src/
-  index.js                      # bundle entry — re-exports every component
-  gs-birthday-picker/
-    gs-birthday-picker.js       # LitElement + customElements.define
-    styles.js                   # component-scoped CSS
+  index.js                          # bundle entry — re-exports every component
   shared/
-    theme.js                    # shared design-token CSS (--gs-* → --_*)
-playground/                     # manual test harnesses
-vite.config.js                  # multi-entry library build
+    theme.js                        # shared --gs-* design tokens
+  gs-birthday-picker/
+    gs-birthday-picker.js
+    styles.js
+    README.md
+  gs-num-pad/
+    gs-num-pad.js
+    README.md
+playground/                         # manual test harnesses
+docs/superpowers/                   # design specs and implementation plans
+vite.config.js                      # multi-entry library build
 ```
 
 ## License
