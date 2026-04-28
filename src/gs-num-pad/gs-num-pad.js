@@ -24,6 +24,7 @@
  */
 
 import { LitElement, html, css, nothing } from 'lit';
+import { gsTokens } from '../shared/theme.js';
 
 export class GsNumPad extends LitElement {
   static formAssociated = true;
@@ -57,11 +58,11 @@ export class GsNumPad extends LitElement {
     focused: { type: Boolean, reflect: true },
   };
 
-  static styles = css`
+  static styles = [gsTokens, css`
     :host {
       display: inline-block;
-      font-family: var(--numpad-font, var(--font-sans, system-ui, sans-serif));
-      background: var(--numpad-bg, #fff);
+      font-family: var(--numpad-font, var(--_font));
+      background: var(--numpad-bg, var(--_bg));
       border-radius: var(--numpad-radius, 12px);
       padding: var(--numpad-padding, 12px);
       box-sizing: border-box;
@@ -75,7 +76,7 @@ export class GsNumPad extends LitElement {
       align-items: center;
       gap: 4px;
       background: var(--numpad-display-bg, transparent);
-      color: var(--numpad-display-color, #111);
+      color: var(--numpad-display-color, var(--_fg));
       font-size: var(--numpad-display-size, 32px);
       font-variant-numeric: tabular-nums;
       font-weight: 500;
@@ -89,17 +90,17 @@ export class GsNumPad extends LitElement {
     }
 
     [part='display']:focus {
-      box-shadow: 0 0 0 2px var(--numpad-submit-bg, #185fa5);
+      box-shadow: 0 0 0 2px var(--numpad-submit-bg, var(--_accent));
     }
 
     [part='display-value'][data-empty='true']::before {
       content: attr(data-placeholder);
-      color: var(--numpad-placeholder-color, rgba(0, 0, 0, 0.35));
+      color: var(--numpad-placeholder-color, var(--_muted));
       opacity: 0.6;
     }
 
     :host([invalid]) [part='display'] {
-      color: var(--numpad-invalid-color, #e24b4a);
+      color: var(--numpad-invalid-color, var(--_danger));
     }
 
     [part='keypad'] {
@@ -112,8 +113,8 @@ export class GsNumPad extends LitElement {
       font-family: inherit;
       font-size: var(--numpad-key-size, 22px);
       font-weight: 400;
-      background: var(--numpad-key-bg, #f0f0f0);
-      color: var(--numpad-key-color, #111);
+      background: var(--numpad-key-bg, var(--_surface));
+      color: var(--numpad-key-color, var(--_fg));
       border: none;
       border-radius: var(--numpad-key-radius, 8px);
       padding: var(--numpad-key-padding, 14px 0);
@@ -126,7 +127,7 @@ export class GsNumPad extends LitElement {
     }
 
     button[part~='key']:hover {
-      background: var(--numpad-key-bg-active, #e0e0e0);
+      background: var(--numpad-key-bg-active, var(--_surface-strong));
     }
 
     button[part~='key']:active {
@@ -139,13 +140,13 @@ export class GsNumPad extends LitElement {
     }
 
     button[part~='key-special'] {
-      background: var(--numpad-special-bg, #e8e8e8);
-      color: var(--numpad-special-color, #111);
+      background: var(--numpad-special-bg, var(--_surface-strong));
+      color: var(--numpad-special-color, var(--_fg));
     }
 
     button[part~='key-submit'] {
-      background: var(--numpad-submit-bg, #185fa5);
-      color: var(--numpad-submit-color, #fff);
+      background: var(--numpad-submit-bg, var(--_accent));
+      color: var(--numpad-submit-color, var(--_on-accent));
       font-weight: 500;
     }
 
@@ -169,7 +170,7 @@ export class GsNumPad extends LitElement {
       font-size: 0.65em;
       opacity: 0.7;
     }
-  `;
+  `];
 
   constructor() {
     super();
