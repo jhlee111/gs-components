@@ -442,9 +442,16 @@ export class GsNumPad extends LitElement {
         if (!this.allowNegative) return;
         next = this._toggleSign(prev);
         break;
-      case 'decimal':
-        // Manual decimal mode is reserved for future versions.
-        return;
+      case 'decimal': {
+        // Manual decimal: only meaningful when decimals > 0 and not in
+        // auto-decimal (cents-style) mode. Inserts a single "." into
+        // value; subsequent digit input fills the fractional part.
+        const dec = Number(this.decimals ?? 0);
+        if (this.autoDecimal || dec === 0) return;
+        if (prev.includes('.')) return;
+        next = prev === '' ? '0.' : `${prev}.`;
+        break;
+      }
       case 'submit':
         this._emit('numpad-input', this._inputDetail({
           value: prev,
@@ -552,13 +559,31 @@ export class GsNumPad extends LitElement {
   }
 
   _append(value, digit) {
+    if (this._isManualDecimalMode()) {
+      // Manual decimal: respect user's "." placement. Reject digit
+      // when fractional length would exceed `decimals`.
+      const dotIdx = value.indexOf('.');
+      if (dotIdx >= 0) {
+        const fracLen = value.length - dotIdx - 1;
+        if (fracLen >= Number(this.decimals)) return value;
+      }
+      return value + digit;
+    }
     return this._compose(this._digitsOf(value) + digit, this._signOf(value));
   }
 
   _backspace(value) {
+    if (this._isManualDecimalMode()) {
+      if (value.length === 0) return '';
+      return value.slice(0, -1);
+    }
     const digits = this._digitsOf(value);
     if (digits.length <= 1) return '';
     return this._compose(digits.slice(0, -1), this._signOf(value));
+  }
+
+  _isManualDecimalMode() {
+    return !this.autoDecimal && Number(this.decimals ?? 0) > 0;
   }
 
   _toggleSign(value) {
