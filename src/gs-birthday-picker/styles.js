@@ -20,6 +20,16 @@ export const styles = css`
      kick in on short+wide hosts (e.g. landscape phones) even when
      the host page itself is a totally different size.
      ============================================================ */
+  :host,
+  :host * {
+    /* iOS Safari: host-page touch-action does not propagate through
+       Shadow DOM, and per-element values (default: auto) win for taps
+       that hit the descendant — so :host alone is NOT enough.
+       Apply to every shadow descendant so double-tap-to-zoom is
+       disabled regardless of where the tap lands. */
+    touch-action: manipulation;
+  }
+
   :host {
     display: block;
     font-family: var(--_font);

@@ -59,6 +59,15 @@ export class GsNumPad extends LitElement {
   };
 
   static styles = [gsTokens, css`
+    :host,
+    :host * {
+      /* iOS Safari: host-page touch-action does not propagate through
+         Shadow DOM, and per-element values (default: auto) win for taps
+         that hit the descendant. Apply to every shadow descendant so
+         double-tap-to-zoom is disabled regardless of where the tap lands. */
+      touch-action: manipulation;
+    }
+
     :host {
       display: inline-block;
       font-family: var(--numpad-font, var(--_font));
